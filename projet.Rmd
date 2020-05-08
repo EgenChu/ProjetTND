@@ -19,11 +19,7 @@ library(pastecs)
 
 donnees = read.csv2(file = "donnes_covid19_avril_total_par_departement_GPS.csv")
 
-#Pour le leafchart, les valeurs des département ci-dessous se situe en Amérique, peut-être une erreur ?
-erreurDep = c("Nord","Tarn","Lot","Gard","Var","Jura","Indre","Ain")
-
 donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total + hospitalises_total + gueris_total) 
-donneesAll = donneesAll[!donneesAll[,1] %in% erreurDep,]
 
 head(donneesAll)
 ```
@@ -39,8 +35,6 @@ Analyse descriptive :
 summary(donnees[,5:8])
 ```
 On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individues qui pesent très "lourd" dans ce jeu de données. De plus elle est accentué par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variable), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
-
-
 3.
 
 ```{r, fig.show='hide'}
@@ -51,6 +45,7 @@ carteFrance = map('france',col="grey", fill=TRUE, bg="white")
 ```{r, warning=FALSE}
 
 colors =  c("#e31212","#fc7703","#edd21f","#b0e882")
+
 deces_motif <- c(500, 2000, 5000, 10000)
 
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha=1) + ylim(40,52) + coord_map() + 
@@ -105,7 +100,7 @@ basemap %>%
                 width = 50 * sqrt(donneesAll$victimeTotale) / sqrt(max(donneesAll$victimeTotale)),
                 colorPalette = colors, legend = FALSE) %>% setView(lng = 2.3522219, lat = 48.856614, zoom = 7) %>% addLegend(
                         colors = colors, opacity = 1,
-                        labels = c("Décès", "Réanimation", "Hospitalisé","Guérie")
+                        labels = c("Décès", "Réanimations", "Hospitalisées","Guéries")
                         ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude, lat = donneesAll$latitude, label = donneesAll[,1], 
                       labelOptions = labelOptions(noHide = T, direction = 'bottom', textOnly = T,offset = c(2,2)))
 
