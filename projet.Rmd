@@ -1,13 +1,13 @@
 ---
 title: "Projet"
-author: "Sutra Suhana (21701858) "
+author: "Sutra Suhana (21701858) Skhiri Nesrine (21709236)"
 date: "4/28/2020"
 output: html_document
 ---
 
 
 ## Partie 1 : Analyses descriptives
-1.
+1.Chargement du jeu de données
 ```{r cars,message=FALSE}
 library(dplyr)
 library(leaflet)
@@ -16,7 +16,6 @@ library(htmltools)
 library(maps)
 library(ggplot2)
 library(pastecs)
-
 donnees = read.csv2(file = "donnes_covid19_avril_total_par_departement_GPS.csv")
 
 donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total + hospitalises_total + gueris_total) 
@@ -24,76 +23,74 @@ donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total 
 head(donneesAll)
 ```
 
-2.
+2. Présentation brève des données
 
 Description du jeu de données : 
-  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on repertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entière. Il y a alors 4 catégories, les personnes qui sont décédés suite au virus, ceux qui s'en sont sorti guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière.
+  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on répertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entières. Il y a alors 4 catégories, les personnes qui sont décédées suite au virus, ceux qui s'en sont sortis guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière. Les variables deces_total, reanimation_total, hospitalises_total, gueris_total sont des variables quantitatives continues. La variable maille_nom est qualitative continue, la variable duree_jours est quantitatice temporelle, et les variables latitude et longitude sont discrètes ??? (pas sur)
   
 Analyse descriptive :
   Regardons comment les observations des variables deces_total, reanimation_total, hospitalises_total et gueris_total sont réparties
 ```{r}
 summary(donnees[,5:8])
 ```
-On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individues qui pesent très "lourd" dans ce jeu de données. De plus elle est accentué par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variable), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
-3.
+On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individus qui pèsent très "lourd" dans ce jeu de données. De plus, elle est accentuée par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variables), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
+
+```{r}
+#boxplots a mettre
+boxplot.stats(donnees$deces_total)$out
+
+```
+On peut observer la présence de nombreux outliers dans chacune des variables continues(exemple pour la variable deces_total).
+Comme expliqué précedement, on observe également sur le boxplot que pour la variable des hospitalisation_total 75% des départements de France ont un nombre d'hospitalisation inférieur ou égale à 3819.
+
+
+3. Cartes géographique des données
 
 ```{r, fig.show='hide'}
-
 carteFrance = map('france',col="grey", fill=TRUE, bg="white")
 ```
 
 ```{r, warning=FALSE}
-
 colors =  c("#e31212","#fc7703","#edd21f","#b0e882")
 
 deces_motif <- c(500, 2000, 5000, 10000)
-
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha=1) + ylim(40,52) + coord_map() + 
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = deces_total,alpha = deces_total), color = colors[1]) + 
  ggtitle("Nombre de décès en France Métropolitaine suite au Covid-19 \n(1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de décès", range=c(1,10),breaks = deces_motif) +
  scale_alpha_continuous(name="Nombre de décès", range=c(0.2,1),breaks = deces_motif)
-
 rea_motif <- c(200,1000, 3000, 7000, 10000)
-
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = reanimation_total,alpha = reanimation_total), color = colors[2]) +
  ggtitle("Nombre de personnes en réanimation en France Métropolitaine \nsuite du Covid-19 (1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de personne en réanimation", range = c(1,10),breaks = rea_motif) +
  scale_alpha_continuous(name="Nombre de personne en réanimation", range = c(0.1,2),breaks = rea_motif)
-
  hosp_motif<- c(1000,5000, 10000, 20000, 40000)
-
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = hospitalises_total,alpha = hospitalises_total), color = colors[3]) +
  ggtitle("Nombre de personnes hospitalisées en France Métropolitaine \nsuite du Covid-19 (1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de personnes hospitalisées", range = c(1,10),breaks = hosp_motif) +
  scale_alpha_continuous(name="Nombre de personnes hospitalisées", range = c(0.2,2),breaks = hosp_motif)
-
  gueri_motif<- c(500,2000, 5000, 10000, 20000)
-
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = gueris_total,alpha = gueris_total), color = colors[4]) +
  ggtitle("Nombre de personnes guéris en France Métropolitaine \nsuite du Covid-19 (1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de personnes guéris", range = c(1,10),breaks = gueri_motif) +
  scale_alpha_continuous(name="Nombre de personnes guéris", range = c(0.2,2),breaks = gueri_motif)
-
-
 ```
 
-D'après les différents graphes observés ci-dessus, les zones les plus touchées suite au Covid-19 (personnes décédées, personnes en phase de réanimation, personnes hospitalisées et personnes) sont celles située en région parisienne ainsi que les départements de l'est. Néanmoins, on peut tout de même observer qu'il y a aussi une forte concentration de touchées dans les départements près de Lyon, cependant, le nombre de décès à Marseille est inférieure par rapport au zone cité jusque là mais il compte tout de même un nombre important de personnes en réanimation, de personnes décédées et de personnes guéries. Mise à part cela, on remarque qu'il ya plus ou moins une répartition égale au niveau de la France.
-4
+D'après les différents graphes observés ci-dessus, les zones les plus touchées suite au Covid-19 (personnes décédées, personnes en phase de réanimation, personnes hospitalisées et personnes) sont celles situées en région parisienne ainsi que les départements de l'est. Néanmoins, on peut tout de même observer qu'il y a aussi une forte concentration de personnes touchées dans les départements près de Lyon. Cependant, le nombre de décès à Marseille est inférieure par rapport aux zones citées jusque là mais il compte tout de même un nombre important de personnes en réanimation, de personnes décédées et de personnes guéries. Mise à part cela, on remarque qu'il y a plus ou moins une répartition égale au niveau de la France.
+
+
+4. Bonus
 ```{r}
-
 tilesURL <- "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-
 basemap <- leaflet(width = "100%", height = "400px") %>%
   addTiles(tilesURL)
-
 basemap %>% 
   addMinicharts(lng = donneesAll$longitude[], lat = donneesAll$latitude[],type = "pie",
                 chartdata = donneesAll[,c("deces_total","reanimation_total","hospitalises_total","gueris_total")],
@@ -103,9 +100,4 @@ basemap %>%
                         labels = c("Décès", "Réanimations", "Hospitalisées","Guéries")
                         ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude, lat = donneesAll$latitude, label = donneesAll[,1], 
                       labelOptions = labelOptions(noHide = T, direction = 'bottom', textOnly = T,offset = c(2,2)))
-
 ```
-
-
-
-  
