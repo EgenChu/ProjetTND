@@ -31,7 +31,7 @@ head(donneesAll)
 2.
 
 Description du jeu de données : 
-  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on repertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entière. Il y a alors 4 catégories, les personnes qui sont décédés suite au virus, ceux qui s'en sont sorti guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière.
+  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on repertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entière. Il y a alors 4 catégories, les personnes qui sont décédés suite au virus, ceux qui s'en sont sorti guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière. Les variables deces_total, reanimation_total, hospitalises_total, gueris_total sont des variables quantitatives continues. La variable maille_nom est qualitative continue, la variable duree_jours est quantitatice temporelle, et les variables latitude et longitude sont discrètes ??? (pas sur)
   
 Analyse descriptive :
   Regardons comment les observations des variables deces_total, reanimation_total, hospitalises_total et gueris_total sont réparties
@@ -39,6 +39,12 @@ Analyse descriptive :
 summary(donnees[,5:8])
 ```
 On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individues qui pesent très "lourd" dans ce jeu de données. De plus elle est accentué par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variable), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
+
+```{r}
+//boxplots a mettre
+```
+On peut observer la présence de nombreux outliers dans chacune des variables continues.
+Comme expliqué précedement, on observe également que pour la variable des hospitalisation_total 75% des départements de France ont un nombre d'hospitalisation inférieur ou égale à 3819.
 
 
 3.
