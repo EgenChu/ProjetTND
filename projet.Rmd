@@ -1,6 +1,6 @@
 ---
 title: "Projet"
-author: "Sutra Suhana 21701858"
+author: "Sutra Suhana (21701858) "
 date: "4/28/2020"
 output: html_document
 ---
@@ -51,7 +51,7 @@ carteFrance = map('france',col="grey", fill=TRUE, bg="white")
 ```{r, warning=FALSE}
 
 colors =  c("#e31212","#fc7703","#edd21f","#b0e882")
-deces_motif <- c(500, 2000, 7000, 10000)
+deces_motif <- c(500, 2000, 5000, 10000)
 
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha=1) + ylim(40,52) + coord_map() + 
  xlim(-5,10) + theme_void() + 
@@ -90,9 +90,9 @@ ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group),
 
 ```
 
+D'après les différents graphes observés ci-dessus, les zones les plus touchées suite au Covid-19 (personnes décédées, personnes en phase de réanimation, personnes hospitalisées et personnes) sont celles située en région parisienne ainsi que les départements de l'est. Néanmoins, on peut tout de même observer qu'il y a aussi une forte concentration de touchées dans les départements près de Lyon, cependant, le nombre de décès à Marseille est inférieure par rapport au zone cité jusque là mais il compte tout de même un nombre important de personnes en réanimation, de personnes décédées et de personnes guéries. Mise à part cela, on remarque qu'il ya plus ou moins une répartition égale au niveau de la France.
 4
 ```{r}
-
 
 tilesURL <- "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
 
@@ -106,7 +106,7 @@ basemap %>%
                 colorPalette = colors, legend = FALSE) %>% setView(lng = 2.3522219, lat = 48.856614, zoom = 7) %>% addLegend(
                         colors = colors, opacity = 1,
                         labels = c("Décès", "Réanimation", "Hospitalisé","Guérie")
-                        ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude[], lat = donneesAll$latitude[], label = donneesAll[,1], 
+                        ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude, lat = donneesAll$latitude, label = donneesAll[,1], 
                       labelOptions = labelOptions(noHide = T, direction = 'bottom', textOnly = T,offset = c(2,2)))
 
 ```
