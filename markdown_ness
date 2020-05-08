@@ -1,0 +1,76 @@
+---
+title: "Projet 2020-2021"
+author: "Nesrine Skhiri"
+date: "4/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(root="/Users/nesrineskhiri/Documents/TDD/TDD/projet")
+```
+
+# Partie 1: Analyses descriptives
+
+
+1.Chargement du jeu de données
+
+```{r exo1-1}
+
+data_covid <- read.csv("donnes_covid19_avril_total_par_departement_GPS.csv",sep=";")
+
+```
+
+2. Présentation brève des données
+```{r exo1-2}
+library(rmarkdown)
+
+paged_table(data_covid)
+summary(data_covid)
+str(data_covid)
+
+dim(data_covid)
+names(data_covid)
+
+boxplot(data_covid[,5:6])
+boxplot(data_covid[,7:8])
+
+boxplot.stats(data_covid$deces_total)$out
+hist(data_covid$gueris_total, breaks = 20)
+
+```
+Les 8 variables de notre jeu de données sont:
+
+  maille_nom: qualitative nominal catégorielle
+  duree_jours: quantitative temporelle numérique
+  latitue et longitude: discret?? catégorielle
+  deces_total: quantitative continue numérique
+  reanimation_total: quantitative continue numérique
+  hospitalises_total: quantitative continue numérique
+  gueris_total: quantitative continue numérique
+
+Le jeu de données a pour dimension 100 x 8 donc 100 observations avec 8 varibales chacune.
+D'après summary(), les moyennes ne sont pas très proches des médianes. Il y a à priori des valeurs extrêmes (décès_total: les valeurs varient entre 0 et 10 285 et la médiane est de 355 tandis que la moyenne est de 1047)
+
+D'après les boxplots, on observe que  plus de 1/2 des données se situent au dessus de la médiane. On observe également des outliers dans chacune des variables continues.
+L'étendue des valeurs de chaque variables continues est assez similaire.
+
+
+
+3. Carte géographique des données
+```{r exo1-3}
+library(ggplot2)
+library(dplyr)
+library(maps)
+
+FR <- map_data("world") %>% filter(region=="FR")
+latitude <- data_covid[,3]
+longitude <- data_covid[,4]
+
+ggplot()+
+    geom_polygon(data = FR, aes(x=longitude, y = latitude, group = group), fill="grey", alpha=0.3) +
+    geom_point( data=data_covid[,5:8], aes(x=longitude, y=latitude)) +
+    scale_size_continuous(range=c(1,12))
+
+
+```
