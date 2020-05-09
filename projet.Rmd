@@ -1,8 +1,11 @@
 ---
-title: "Projet"
-author: "Sutra Suhana (21701858) Skhiri Nesrine (21709236)"
+title: "Projet TND"
+author: "Sutra Suhana (21701858) & Skhiri Nesrine (21709236)"
 date: "4/28/2020"
-output: html_document
+output:
+  html_document:
+    toc: true
+    theme: united
 ---
 
 
@@ -16,19 +19,21 @@ library(htmltools)
 library(maps)
 library(ggplot2)
 library(pastecs)
+library(rmarkdown)
 donnees = read.csv2(file = "donnes_covid19_avril_total_par_departement_GPS.csv")
-
 donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total + hospitalises_total + gueris_total) 
-
 head(donneesAll)
+paged_table(donneesAll)
 ```
 
 2. Présentation brève des données
 
-Description du jeu de données : 
+* Description du jeu de données :
+
   Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on répertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entières. Il y a alors 4 catégories, les personnes qui sont décédées suite au virus, ceux qui s'en sont sortis guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière. Les variables deces_total, reanimation_total, hospitalises_total, gueris_total sont des variables quantitatives continues. La variable maille_nom est qualitative continue, la variable duree_jours est quantitatice temporelle, et les variables latitude et longitude sont discrètes ??? (pas sur)
   
-Analyse descriptive :
+* Analyse descriptive :
+
   Regardons comment les observations des variables deces_total, reanimation_total, hospitalises_total et gueris_total sont réparties
 ```{r}
 summary(donnees[,5:8])
@@ -36,13 +41,13 @@ summary(donnees[,5:8])
 On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individus qui pèsent très "lourd" dans ce jeu de données. De plus, elle est accentuée par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variables), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
 
 ```{r}
-#boxplots a mettre
+boxplot(donnees[,5:8], main="Boîte à moustaches", names=c("décès total","réanimation totale", "hospitali. total","guéris total"), ylab="Nombre d'individus")
+
+boxplot(scale(donnees[,5:8], center = T, scale = T), main="Boîte à moustaches centrée réduite", names=c("décès total","réanimation totale", "hospitali. total","guéris total"), ylab="Nombre d'individus")
 boxplot.stats(donnees$deces_total)$out
-
 ```
-On peut observer la présence de nombreux outliers dans chacune des variables continues(exemple pour la variable deces_total).
-Comme expliqué précedement, on observe également sur le boxplot que pour la variable des hospitalisation_total 75% des départements de France ont un nombre d'hospitalisation inférieur ou égale à 3819.
-
+On peut observer la présence de nombreux outliers dans chacune des variables continues(exemple pour la variable deces_total). Nous donc plusieurs valeurs extrêmes et donc peut être abérrantes.
+Comme expliqué précedement, on observe également sur le boxplot que pour la variable des hospitalisation_total 75% des départements de France ont un nombre d'hospitalisation inférieur ou égale à 3819. On observe également que 50% des individus de chaque variable est concentrée par rapport au reste de la distribution. Pour la variable hospitalises_total, 50% des départements français ont un nombre d'hospitalisés total entre 840.8 et 3819.5.
 
 3. Cartes géographique des données
 
@@ -54,27 +59,34 @@ carteFrance = map('france',col="grey", fill=TRUE, bg="white")
 colors =  c("#e31212","#fc7703","#edd21f","#b0e882")
 
 deces_motif <- c(500, 2000, 5000, 10000)
+
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha=1) + ylim(40,52) + coord_map() + 
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = deces_total,alpha = deces_total), color = colors[1]) + 
  ggtitle("Nombre de décès en France Métropolitaine suite au Covid-19 \n(1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de décès", range=c(1,10),breaks = deces_motif) +
  scale_alpha_continuous(name="Nombre de décès", range=c(0.2,1),breaks = deces_motif)
+
 rea_motif <- c(200,1000, 3000, 7000, 10000)
+
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = reanimation_total,alpha = reanimation_total), color = colors[2]) +
  ggtitle("Nombre de personnes en réanimation en France Métropolitaine \nsuite du Covid-19 (1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de personne en réanimation", range = c(1,10),breaks = rea_motif) +
  scale_alpha_continuous(name="Nombre de personne en réanimation", range = c(0.1,2),breaks = rea_motif)
+
  hosp_motif<- c(1000,5000, 10000, 20000, 40000)
+ 
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = hospitalises_total,alpha = hospitalises_total), color = colors[3]) +
  ggtitle("Nombre de personnes hospitalisées en France Métropolitaine \nsuite du Covid-19 (1/4/20 - 14/4/20)") + 
  scale_size_continuous(name="Nombre de personnes hospitalisées", range = c(1,10),breaks = hosp_motif) +
  scale_alpha_continuous(name="Nombre de personnes hospitalisées", range = c(0.2,2),breaks = hosp_motif)
+
  gueri_motif<- c(500,2000, 5000, 10000, 20000)
+ 
 ggplot() + geom_polygon(data = carteFrance, aes(x=long, y = lat, group = group), fill="grey", alpha = 1) + ylim(40,52) + coord_map() +
  xlim(-5,10) + theme_void() + 
  geom_point(data=donnees, aes(x = longitude, y = latitude, size = gueris_total,alpha = gueris_total), color = colors[4]) +
@@ -91,6 +103,7 @@ D'après les différents graphes observés ci-dessus, les zones les plus touché
 tilesURL <- "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
 basemap <- leaflet(width = "100%", height = "400px") %>%
   addTiles(tilesURL)
+
 basemap %>% 
   addMinicharts(lng = donneesAll$longitude[], lat = donneesAll$latitude[],type = "pie",
                 chartdata = donneesAll[,c("deces_total","reanimation_total","hospitalises_total","gueris_total")],
@@ -101,3 +114,207 @@ basemap %>%
                         ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude, lat = donneesAll$latitude, label = donneesAll[,1], 
                       labelOptions = labelOptions(noHide = T, direction = 'bottom', textOnly = T,offset = c(2,2)))
 ```
+
+
+## Partie 2 : Prédictions du nombre de décès
+
+1. Corrélation des données
+``` {r}
+library(corrplot)
+library(RColorBrewer)
+
+correlation_matrix = cor(donneesAll%>% select(duree_jours,latitude,longitude,deces_total,reanimation_total,hospitalises_total,gueris_total, victimeTotale))
+corrplot(correlation_matrix, type='lower',  method = 'number', title="Matrice de corrélation", tl.srt=45, mar=c(0,0,1,0))
+corrplot(correlation_matrix, type='lower',  method = 'pie', title="Matrice de corrélation", tl.srt=45, mar=c(0,0,1,0))
+
+```
+
+On observe que les variables deces_total, reanimation_total, hospitalises_total et gueris_total sont fortement corrélés positivement entres elles. Plus précisement, les variables hospitalises_total et reanimation_total sont les variables les plus fortement corréles positivement. Tandis que duree_jours est faiblement corrélés négativement avec toutes les variables. Cependant, on observe que latitude est légèrement corrélée positivement avec les variables deces_total, reanimation_total, hospitalises_total et gueris_total. On peut donc en déduire qu'en fonction de la latitude, le nombre de décès, d'hospitalisés, de réanimation, de guéris et de victime totale augmente comme c'est bien le cas à une latitude Nord (région Parisienne, Grand Est) et une latitude Sud (Lyon, Marseille...). Lorsque la latitude augmente, nous observons donc que plus la région française est au Nord plus le nombre de décès, hospitalisés, guéris et de réanimations augmente également.
+
+2. Nuage de points entre chaque variable et la variable "deces_total"
+
+``` {r}
+ggplot(donnees, aes(x=reanimation_total,y=deces_total)) + geom_point()
+ggplot(donnees, aes(x=hospitalises_total,y=deces_total)) + geom_point()
+ggplot(donnees, aes(x=gueris_total,y=deces_total)) + geom_point()
+
+```
+la variable la plus proche???
+
+3. Division du jeu en deux ensemble apprentissage/test (80-20%)
+
+``` {r}
+
+sample <- sample.int(n=nrow(donnees), size=floor(.80*nrow(donnees)), replace = F)
+train <- donnees[sample, ]
+test  <- donnees[-sample, ]
+```
+
+
+4. Régression linéaire
+
+##### Valeur explicative : reanimation_total / Valeur prédite : deces_total
+``` {r}
+reg_rea <- lm(deces_total ~ reanimation_total, data = train)
+plot(train$reanimation_total, train$deces_total)
+abline(reg_rea, col='red')
+plot(reg_rea)
+
+```
+      
+  * Residuals vs fitted:
+  
+     La courbe de régression locale est presque plate et les points sont presques tous dispersés de manière égale autour de la droite horizontale (Residuals=0). On peut en déduire que le modèle de régression est acceptée.
+      
+  * Normal Q-Q plot: 
+  
+    Les résidus se rapprochent de la droite mais s'éloignent aux extrémités. On peut donc en déduire que le modèle est moyennement bon.
+    
+  * Scale-Location:
+      
+    La courbe rouge est ascendante, cela signifie donc que la dispersion des résidus n'est pas homogène. Dans ce cas, le modèle n'est pas bon.
+    
+  * Residuals vs Levarage:
+    
+    Ce graphique va nous permettre d'évaluer l'influence des outliers dans les résultats de la régression. On observe deux points 73 et 71 qui sont à la limite de la cook's distance. Cependant, ils ne sont pas au delà des deux limites de la cook's distance. Ces valeurs extrêmes n'ont donc pas une grande influence sur la droite de régression. C'est donc un cas avec des bruits sans influence.
+    
+    
+      
+##### Valeur explicative : hospitalises_total / Valeur prédite : deces_total
+
+``` {r}
+
+reg_hospi <- lm(deces_total ~ hospitalises_total, data = train)
+plot(train$hospitalises_total, train$deces_total)
+abline(reg_hospi, col='red')
+plot(reg_hospi)
+
+```
+
+    
+  * Residuals vs fitted:
+  
+     La courbe de régression locale est presque plate et les points sont presques tous dispersés de manière égale autour de la droite horizontale (Residuals=0). Il y a seulement quelques valeurs extrêmes après 20 000. On peut en déduire que le modèle de régression est acceptée. 
+      
+  * Normal Q-Q plot: 
+  
+    Les résidus se rapprochent de la droite mais s'éloignent aux extrémités de manière ascendante. On peut donc en déduire que le modèle est moyennement bon.
+    
+  * Scale-Location:
+      
+    La courbe rouge est ascendante,les résidus se dispersent après la valeur 0. Cela signifie donc que la dispersion des résidus n'est pas homogène. Dans ce cas, le modèle n'est pas bon.
+    
+  * Residuals vs Levarage:
+    
+    On observe deux points 71 et 92 qui sont à la limite extérieur de la cook's distance. Ce sont tout deux des points influents, ils ont donc une grande influence sur la droite de régression. Les coeffecients et la valeur de b  de l'ordonnée à l'origine peuvent changer de manière significative. Il faudrait donc le retirer et refaire un Residuals vs Levarage sans ses outliers. C'est donc un cas avec des bruits avec influence.
+    
+    
+
+
+##### Valeur explicative : gueris_total / Valeur prédite : deces_total
+
+``` {r}
+
+reg_gueris <- lm(deces_total ~ gueris_total, data = train)
+plot(train$gueris_total, train$deces_total)
+abline(reg_gueris, col='red')
+plot(reg_gueris)
+
+```
+
+  * Residuals vs fitted:
+  
+     La courbe de régression locale est presque plate et les points sont presques tous dispersés de manière égale autour de la droite horizontale (Residuals=0). Il y a seulement quelques valeurs extrêmes après 3 000. On peut en déduire que le modèle de régression est acceptée. 
+      
+  * Normal Q-Q plot: 
+  
+    Les résidus se rapprochent de la droite mais s'éloignent aux extrémités de manière ascendante. On peut donc en déduire que le modèle n'est pas vraiment bon.
+    
+  * Scale-Location:
+      
+    La courbe rouge est ascendante,les résidus se dispersent après la valeur 0. Cela signifie donc que la dispersion des résidus n'est pas homogène. Dans ce cas, le modèle n'est pas bon.
+    
+  * Residuals vs Levarage:
+    
+    On observe deux points 87 et 92 qui sont à la limite extérieur de la cook's distance. Cependant, ils ne sont pas au delà des deux limites de la cook's distance. Ces valeurs extrêmes n'ont donc pas une grande influence sur la droite de régression. On observe également un autre point, le point 71 qui est entre les deux Cook's distance supérieur. Mais, il reste tout de même à l'intérieur des lignes pointilles externes, il n'a donc pas une grande influence sur la droite de régression. C'est un cas avec des bruits sans influence.
+    
+  
+5. Commentaires des résultats de la régression
+
+``` {r}
+summary(reg_rea)
+```
+
+``` {r}
+summary(reg_hospi)
+```
+
+
+``` {r}
+summary(reg_gueris)
+```
+    coeff à analyser
+    
+6. Erreur MAE et MSE
+
+
+``` {r, warning=FALSE}
+
+MAE <- function(y_reel, y_est){
+  val = abs(y_reel-y_est)
+  mae_cal = mean(val)
+  return(mae_cal)
+  
+}
+
+MSE <- function(y_reel, y_est){
+  val = (y_reel-y_est)^2
+  mse_cal = mean(val)
+  return(mse_cal)
+  
+}
+
+#MAE et MSE reanimation_total ensemble apprentissage
+y_estime_rea=predict(reg_rea)
+MAE_rea= MAE(train$reanimation_total,y_estime_rea)
+MSE_rea= MSE(train$reanimation_total,y_estime_rea)
+
+
+#MAE et MSE hospitalises_total ensemble apprentissage
+y_estime_hosp=predict(reg_hospi)
+MAE_hosp= MAE(train$hospitalises_total,y_estime_hosp)
+MSE_hosp= MSE(train$hospitalises_total,y_estime_hosp)
+
+
+#MAE et MSE gueris_total ensemble apprentissage
+y_estime_gueris=predict(reg_gueris)
+MAE_gueris= MAE(train$hospitalises_total,y_estime_gueris)
+MSE_gueris= MSE(train$hospitalises_total,y_estime_gueris)
+
+
+#MAE et MSE reanimation_total ensemble test
+y_estime_rea_test=predict(lm(donnees$deces_total ~ donnees$reanimation_total), test)
+MAE_rea_test=MAE(test$reanimation_total,y_estime_rea_test)
+MSE_rea_test= MSE(test$reanimation_total,y_estime_rea_test)
+
+
+#MAE et MSE hospitalises_total ensemble test
+y_estime_hospi_test=predict(lm(donnees$deces_total ~ donnees$hospitalises_total), test)
+MAE_hospi_test=MAE(test$hospitalises_total,y_estime_hospi_test)
+MSE_hospi_test= MSE(test$hospitalises_total,y_estime_hospi_test)
+
+
+#MAE et MSE gueris_total ensemble test
+y_estime_gueris_test=predict(lm(donnees$deces_total ~ donnees$gueris_total), test)
+MAE_gueris_test=MAE(test$gueris_total,y_estime_gueris_test)
+MSE_gueris_test= MSE(test$gueris_total,y_estime_gueris_test)
+
+
+df <- data_frame(Variables=c("guéris", "hospitalisés", "réanimation"),
+MAE_test=c(MAE_gueris_test,MAE_hospi_test,MAE_rea_test),
+MSE_test=c(MSE_gueris_test,MSE_hospi_test,MSE_rea_test),
+MAE_app=c(MAE_gueris, MAE_hosp, MAE_rea),
+MSE_app=c(MSE_gueris,MSE_hosp,MSE_rea))
+paged_table(df)
+```
+7. à faire
