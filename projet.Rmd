@@ -374,13 +374,21 @@ En observant la disposition des individus sur le graphe, on peut observer des gr
 
 Réalisons un classification hiérarchique ascendante afin de répartir les individus dans un certain nombre de classe, nous allons pour cela utiliser les 4 critères à savoir lien minimum, moyen, maximum et Ward, nous allons par la suite regarder les sauts d'inertie de chaque dendograme 
 ```{r}
+library(ggplot2)
 datadist = dist(x = donnees[,-1],method = "euclidean")
+```
 
+
+```{r}
 #En utilisant le critère lien minimun
 dataclustm = hclust(d = datadist,method = "single")
 sautInertie = sort(dataclustm$height, decreasing = TRUE)
 plot(dataclustm,main = "Dendograme construit grace à la méthode d'agrégation lien minimum")
 plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien minimum")
+plot(dataclustm, hang = -1, cex=0.4)
+cahm <- cutree(dataclustm,k=3)
+rect.hclust(dataclustm, k=3, border="red")
+
 ```
 
 
@@ -390,6 +398,10 @@ dataclustM = hclust(d = datadist,method = "complete")
 sautInertie = sort(dataclustM$height, decreasing = TRUE)
 plot(dataclustM,main = "Dendogramme construit grace à la méthode d'agrégation lien maximum")
 plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien maximum")
+plot(dataclustM, hang = -1, cex=0.4,main = "Dendogramme construit grace à la méthode d'agrégation lien maximum")
+cahM <- cutree(dataclustM,k=3)
+rect.hclust(dataclustM, k=3, border="red")
+
 ```
 
 
@@ -399,10 +411,13 @@ dataclustAV = hclust(d = datadist,method = "average")
 sautInertie = sort(dataclustAV$height, decreasing = TRUE)
 plot(dataclustAV,main = "Dendogramme construit grace à la méthode d'agrégation lien moyen")
 plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien moyen")
+plot(dataclustAV, hang = -1, cex=0.4,main = "Dendogramme construit grace à la méthode d'agrégation lien moyen")
+cahAV <- cutree(dataclustAV,k=3)
+rect.hclust(dataclustAV, k=3, border="red")
 ```
 
-```{r}
 
+```{r}
 #En utilisant le critère de Ward
 dataclustW = hclust(d = datadist,method = "ward.D2")
 sautInertie = sort(dataclustW$height, decreasing = TRUE)
@@ -411,26 +426,65 @@ plot(dataclustW,main = "Dendograme construit grace à la méthode d'agrégation 
 rect.hclust(dataclustW,3,border = "blue")
 plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie", main = "Représentation des sauts d'inertie du dendogramme Ward")
 
-```
+cahW <- cutree(dataclustW,k=3)
 
+```
 Pour pouvoir trouver le nombre de classe à partir après réalisation d'une CAH, on affiche l'arbre hierachique obtenue, puis on regarde en partant du bas, à partir de quelle hauteur, les distances d'aggregations commencent à croître drastiquement. Pour nous aider, on peut représenter les sauts d'inerties du dendogrammes selon les classes retenues. On regarde ainsi les coudes que le graphe possède et puis on retient la hauteur de ce coude et on le coupe à l'arbre.
 
 Parmis les différents critères, le dendogramme obtenu avec le critère de Ward nous donne des groupes qui sont assez homogènes par rapport aux autres critères et qu'on peut bien différencier les groupes à une certaine hauteur. 3 groupes ont été alors identifié dans le dendogramme selon le critère de Ward.
 
-4.
-```{r}
-group = cutree(dataclustW, k = 3)
+Réalisons maintenant un clustering en k-means qui nous permettra également de répartir les individus en classes bien distinctes.
+```{r, warning=FALSE}
+library(factoextra)
+library(cluster)
+library(gridExtra)
 
-p = ggplot(compos, aes(PC1, PC2)) + geom_point(aes(color=as.factor(group))) + ggtitle("Projection des individus suivant la variable décès")
-  
+#K-means
+
+k2 <- kmeans(donnees[,-1], centers = 2, nstart = 30)
+k3 <- kmeans(donnees[,-1], centers = 3, nstart = 30)
+k4 <- kmeans(donnees[,-1], centers = 4, nstart = 30)
+k5 <- kmeans(donnees[,-1], centers = 5, nstart = 30)
+
+plot(pca$ind$coord, col=k3$cluster, main="ACp/Kmeans")
+
+fviz_nbclust(donnees[,-1], kmeans, method = "wss")
+
+p1 <- fviz_cluster(k2, geom = "point", data = donnees[,-1]) + ggtitle("k = 2")
+p2 <- fviz_cluster(k3, geom = "point",  data = donnees[,-1]) + ggtitle("k = 3")
+p3 <- fviz_cluster(k4, geom = "point",  data = donnees[,-1]) + ggtitle("k = 4")
+p4 <- fviz_cluster(k5, geom = "point",  data = donnees[,-1]) + ggtitle("k = 5")
+
+
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+```
+C
+ontrairement à l'algorithme CAH, l'algorithme K-means nous oblige à choisir le nombre de clusters. Nous avons donc appliquer kmeans à nos données avec un nombre de classes variant de 2 à 5. Nous pouvons ainsi observer différents graph représentant chaque clusters. 
+* On remarque dans le graph k=2 que le groupe à gauche contient des individus très hétérogènes d'où sa forme élargie. 
+* Dans le graph k=3, on observe bien 3 clusters homogènes et différents les uns des autres. 
+* Dans le graph k=4, on observe que les deux clusters à droite sont très proches et se confondent presque. Mais les clusters restent assez homogènes.
+* Dans le graph k=5, on observe une nouvelle fois deux clusters à droite très proches. On remarque également que certaines données sont à la fois dans le cluster 2 et le cluster 5. 
+
+On peut donc en déduire que le nombre de classes idéales est 3. On vérifie nos interprétations avec la méthode du coude. L'emplacement du coude dans le graphique est généralement un indicateur du nombre approprié de clusters. On observe bien un coude entre 3 et 4 clusters.
+
+
+4. Table de confusion
+```{r }
+table(k3$cluster,cahm)
+table(k3$cluster,cahM)
+table(k3$cluster,cahAV)
+table(k3$cluster,cahW)
+```
+Les résultats sont tout de même assez proches, il y a des valeurs qui diffère pour peu mais dans la globalité, on a bien trois groupe avec un presque même repartition que ça soit avec la méthode Kmeans ou CAH.
+
+```{r }
+group = cutree(dataclustW, k = 3)
+p = ggplot(compos, aes(PC1, PC2)) + geom_point(aes(color=as.factor(group))) + ggtitle("Projection des individus suivant les groupes obtenus par la méthode CAH")
 update_labels(p, list(colour="numéro groupe"))
+
+groupeK = k3$cluster
+ggplot(compos, aes(PC1, PC2)) + geom_point(aes(color=as.factor(groupeK))) + ggtitle("Projection des individus suivant les groupes obtenus par la méthode Kmeans")
 ```
 
-
-
-
-
-
-
-
+Les graphiques dessus nous montre bien que les groupes sont répartie de la même façon que ça soit avec l'algorithme des K-Means ou bien en faisant une classification hiearchique. Les groupes qui sont présent sur les graphiques du dessus correspond plus ou moins au groupe identifié à la première question.
 
