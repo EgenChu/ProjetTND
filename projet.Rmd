@@ -22,7 +22,7 @@ library(pastecs)
 library(rmarkdown)
 donnees = read.csv2(file = "donnes_covid19_avril_total_par_departement_GPS.csv")
 donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total + hospitalises_total + gueris_total) 
-head(donneesAll)
+
 paged_table(donneesAll)
 ```
 
@@ -343,7 +343,7 @@ ggplot(compos, aes(PC1,PC2, label=rownames(compos))) + geom_point()
 ```
 
 Après analyse, on peut observer dans un premier temps dans le nuage des individius que deux groupes (voir trois groupes) se forment. Il y a en effet un groupe très condensé d'individu vers le centre du graphe et un autre groupe moins condensé voir presque aligné à l'axe de la première composante.
-On peut aussi observer un autre  groupe d'individus moins condensé .
+On peut aussi observer un autre groupe d'individus moins condensé .
 
 ``` {r}
 plot(pca,choix = "var")
@@ -376,22 +376,11 @@ Réalisons un classification hiérarchique ascendante afin de répartir les indi
 ```{r}
 datadist = dist(x = donnees[,-1],method = "euclidean")
 
-#En utilisant le critère de Ward
-dataclustW = hclust(d = datadist,method = "ward.D2")
-
-sautInertie = sort(dataclustW$height, decreasing = TRUE)
-plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
-plot(dataclustW)
-
-```
-
-
-```{r}
 #En utilisant le critère lien minimun
 dataclustm = hclust(d = datadist,method = "single")
 sautInertie = sort(dataclustm$height, decreasing = TRUE)
-plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
-plot(dataclustm)
+plot(dataclustm,main = "Dendograme construit grace à la méthode d'agrégation lien minimum")
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien minimum")
 ```
 
 
@@ -399,8 +388,8 @@ plot(dataclustm)
 #En utilisant le critère lien maximun
 dataclustM = hclust(d = datadist,method = "complete")
 sautInertie = sort(dataclustM$height, decreasing = TRUE)
-plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
-plot(dataclustM)
+plot(dataclustM,main = "Dendogramme construit grace à la méthode d'agrégation lien maximum")
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien maximum")
 ```
 
 
@@ -408,11 +397,35 @@ plot(dataclustM)
 #En utilisant le critère lien moyen
 dataclustAV = hclust(d = datadist,method = "average")
 sautInertie = sort(dataclustAV$height, decreasing = TRUE)
-plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
-plot(dataclustAV)
+plot(dataclustAV,main = "Dendogramme construit grace à la méthode d'agrégation lien moyen")
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie",main = "Représentation des sauts d'inertie du dendogramme lien moyen")
+```
 
+```{r}
+
+#En utilisant le critère de Ward
+dataclustW = hclust(d = datadist,method = "ward.D2")
+sautInertie = sort(dataclustW$height, decreasing = TRUE)
+
+plot(dataclustW,main = "Dendograme construit grace à la méthode d'agrégation Ward")
+rect.hclust(dataclustW,3,border = "blue")
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie", main = "Représentation des sauts d'inertie du dendogramme Ward")
 
 ```
+
+Pour pouvoir trouver le nombre de classe à partir après réalisation d'une CAH, on affiche l'arbre hierachique obtenue, puis on regarde en partant du bas, à partir de quelle hauteur, les distances d'aggregations commencent à croître drastiquement. Pour nous aider, on peut représenter les sauts d'inerties du dendogrammes selon les classes retenues. On regarde ainsi les coudes que le graphe possède et puis on retient la hauteur de ce coude et on le coupe à l'arbre.
+
+Parmis les différents critères, le dendogramme obtenu avec le critère de Ward nous donne des groupes qui sont assez homogènes par rapport aux autres critères et qu'on peut bien différencier les groupes à une certaine hauteur. 3 groupes ont été alors identifié dans le dendogramme selon le critère de Ward.
+
+4.
+```{r}
+group = cutree(dataclustW, k = 3)
+
+p = ggplot(compos, aes(PC1, PC2)) + geom_point(aes(color=as.factor(group))) + ggtitle("Projection des individus suivant la variable décès")
+  
+update_labels(p, list(colour="numéro groupe"))
+```
+
 
 
 
