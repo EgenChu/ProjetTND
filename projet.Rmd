@@ -30,7 +30,7 @@ paged_table(donneesAll)
 
 * Description du jeu de données :
 
-  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on répertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entières. Il y a alors 4 catégories, les personnes qui sont décédées suite au virus, ceux qui s'en sont sortis guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière. Les variables deces_total, reanimation_total, hospitalises_total, gueris_total sont des variables quantitatives continues. La variable maille_nom est qualitative continue, la variable duree_jours est quantitatice temporelle, et les variables latitude et longitude sont discrètes ??? (pas sur)
+  Ce jeu de données comporte 8 variables et 100 individus. Les individus en question sont des départements de la France, on répertorie dans ce jeu de données le nombre de victimes du Covid-19 en fonction des départements sous forme de valeures entières. Il y a alors 4 catégories, les personnes qui sont décédées suite au virus, ceux qui s'en sont sortis guéris du virus, le nombre de personnes qui sont en réanimation et ceux qui sont hospitalisés. Les 4 dernières variables sont le nom du département en question (en String), sa position (latitude et longitude en valeurs réelle) et la duree_jours en valeur entière. Les variables deces_total, reanimation_total, hospitalises_total, gueris_total sont des variables quantitatives continues. La variable maille_nom est qualitative continue, la variable duree_jours est quantitative temporelle, et les variables latitude et longitude sont discrètes.
   
 * Analyse descriptive :
 
@@ -133,12 +133,26 @@ On observe que les variables deces_total, reanimation_total, hospitalises_total 
 2. Nuage de points entre chaque variable et la variable "deces_total"
 
 ``` {r}
-ggplot(donnees, aes(x=reanimation_total,y=deces_total)) + geom_point()
-ggplot(donnees, aes(x=hospitalises_total,y=deces_total)) + geom_point()
-ggplot(donnees, aes(x=gueris_total,y=deces_total)) + geom_point()
+library(gridExtra)
+
+g1 <- ggplot(donnees, aes(x=duree_jours,y=deces_total)) + geom_point() +ggtitle("Nuage de points jours/décès")+ theme(plot.title = element_text(size=8))
+
+g2 <- ggplot(donnees, aes(x=latitude,y=deces_total)) + geom_point()+ggtitle("Nuage de points latitude/décès")+ theme(plot.title = element_text(size=8))
+
+g3 <- ggplot(donnees, aes(x=longitude,y=deces_total)) + geom_point()+ggtitle("Nuage de points longitude/décès")+ theme(plot.title = element_text(size=8))
+
+g4 <- ggplot(donnees, aes(x=reanimation_total,y=deces_total)) + geom_point()+ggtitle("Nuage de points reanimation/décès")+ theme(plot.title = element_text(size=8))
+
+g5 <- ggplot(donnees, aes(x=hospitalises_total,y=deces_total)) + geom_point()+ggtitle("Nuage de points hospitalisés/décès")+ theme(plot.title = element_text(size=8))
+
+g6 <- ggplot(donnees, aes(x=gueris_total,y=deces_total)) + geom_point()+ggtitle("Nuage de points guéris/décès")+ theme(plot.title = element_text(size=8))
+
+grid.arrange(g1, g2, g3, g4,g5,g6, nrow = 2)
 
 ```
-la variable la plus proche???
+
+On remarque que les variables duree_jours, latitude, et longitude sont assez dispersées. 
+Cependant les variables reanimation_total, hospitalise_total et gueris total semblent expliquer au mieux la variable à prédire deces_total. En effet, on observe une certaine corrélation positive entre chaque variables et la variable à prédire. 
 
 3. Division du jeu en deux ensemble apprentissage/test (80-20%)
 
@@ -241,18 +255,11 @@ plot(reg_gueris)
 5. Commentaires des résultats de la régression
 
 ``` {r}
-summary(reg_rea)
+reg_total <- lm(deces_total ~ gueris_total + reanimation_total+hospitalises_total, data = train)
+summary(reg_total)
 ```
+    La médiane des résidus est de -20.68 ce qui reste proche de 0 par rapport au maximum et minimum de respectivement 1645.75 et -1932.5 . On observe également que notre premier quartile et notre troisième quartile ont presque la même valeur absolue. Les résidus sont donc distribués selon une loi normale. Lorsque le nombre de décès augmente d'une unité, le nombre de réanimations diminue de 0.43, le nombre d'hospitalisation augmente de 0.29 et le nombre de guérison ne varient que de 0.05 .
 
-``` {r}
-summary(reg_hospi)
-```
-
-
-``` {r}
-summary(reg_gueris)
-```
-    coeff à analyser
     
 6. Erreur MAE et MSE
 
