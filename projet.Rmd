@@ -16,9 +16,11 @@ library(htmltools)
 library(maps)
 library(ggplot2)
 library(pastecs)
+
 donnees = read.csv2(file = "donnes_covid19_avril_total_par_departement_GPS.csv")
 
 donneesAll = donnees %>% mutate(victimeTotale = deces_total + reanimation_total + hospitalises_total + gueris_total) 
+
 
 head(donneesAll)
 ```
@@ -36,7 +38,6 @@ summary(donnees[,5:8])
 On peut observer grâce au tableau obtenu ci-dessous, que pour chaque variables, il y a un grand écart entre la médiane et la moyenne, cela signifie qu'il y a des individus qui pèsent très "lourd" dans ce jeu de données. De plus, elle est accentuée par le fait que le troisième quartile est "loin" de la valeur maximale. Prenons le cas de la variable deces_totale (c'est le même cas pour les quatres autres variables), cela veut dire que 75% des départements en France ont un nombre de décès inférieur ou égale à 1016. On peut en conclure alors qu'il y a des départements (zones) en France dont les effets sont plus conséquent et que les effets du Covid-19 ne sont pas les mêmes sur le territoire français.
 
 ```{r}
-#boxplots a mettre
 boxplot.stats(donnees$deces_total)$out
 
 ```
@@ -45,7 +46,6 @@ Comme expliqué précedement, on observe également sur le boxplot que pour la v
 
 
 3. Cartes géographique des données
-
 ```{r, fig.show='hide'}
 carteFrance = map('france',col="grey", fill=TRUE, bg="white")
 ```
@@ -101,3 +101,107 @@ basemap %>%
                         ) %>% addLabelOnlyMarkers(lng = donneesAll$longitude, lat = donneesAll$latitude, label = donneesAll[,1], 
                       labelOptions = labelOptions(noHide = T, direction = 'bottom', textOnly = T,offset = c(2,2)))
 ```
+
+
+## Partie 3 : Clustering des départements selon la dynamique de propagation du virus
+
+```{r}
+library(FactoMineR)
+library(ggplot2)
+
+```
+
+1.
+```{r}
+pca = PCA(donnees[,-1],scale.unit = T,graph = F)
+
+PC1 = pca$ind$coord[,1]
+PC2 = pca$ind$coord[,2]
+labs = rownames(pca$ind$coord)
+
+compos = data.frame(cbind(PC1,PC2))
+rownames(compos) = labs
+
+ggplot(compos, aes(PC1,PC2, label=rownames(compos))) + geom_point()
+
+```
+
+Après analyse, on peut observer dans un premier temps dans le nuage des individius que deux groupes (voir trois groupes) se forment. Il y a en effet un groupe très condensé d'individu vers le centre du graphe et un autre groupe moins condensé voir presque aligné à l'axe de la première composante.
+On peut aussi observer un autre  groupe d'individus moins condensé .
+
+``` {r}
+plot(pca,choix = "var")
+```
+
+Observons maintenant le cercle des coréllations, le plan d'inertie maximum receuille environ 70% de l'inertie totale.
+On peut observer que les variables deces_total, gueris_total, hospitalises_total et reanimation_total sont très corrélées à la première composante, en effet celles-ci sont limites parrallèle à l'axe C1. La variable longitude est également très corrélées à la deuxième composante.
+
+Globalement, on voit que la première composante retranscrit majoritairement les informations liées au victimes du Covid-19 (deces_total,gueris_total, hospitalises_total et reanimation_total) tandis que C2 traduit majoritaire la longitude.
+
+```{r}
+pca$var$contrib
+```
+Pour la contribution des variables, on peut voir que les variable ayant une relation avec le Covid-19 ont effectivement contribué et que cette contribuation est assez égales (aux alentours de 24% - 25%) entre eux. Quant à la deuxième composante, la variable duree_jours à contribué plus de 45%.
+```{r}
+pca$eig[,3]
+```
+On peut voir qu'avec seulement les 2 premières composantes, on recueille plus de 70% de l'inertie totale et qu'en associant la troisième composante, plus de 84% de l'inertie totale est alors enregistré.
+
+2.
+```{r}
+ggplot(compos, aes(PC1, PC2, label = rownames(compos))) + geom_point(aes(color = donnees[,"deces_total"])) + scale_color_gradient(name="Nombre de décès",low = "#00AFBB", high = "#fc0000") + ggtitle("Projection des individus suivant la variable décès")
+``` 
+
+En observant la disposition des individus sur le graphe, on peut observer des groupes d'individu regroupé par couleurs rouge, orange et bleu-gris. Les département ayant le nombre de décès faible représente le groupe très condensé (en bleu) tandis que le groupe moins condensé en orange représente les département ayant un nombre totale de décès aux alentours de 5000. D'après ce graphe, seule un département à un nombre de total décès supérieur à 10000. Suivant la variable décès et le graphique obtenu, plus le nombre de décès  dans le département est conséquent, plus il est rouge et disposé à gauvhe Moins le nombre de décès est conséquent, la couleur du point devient alors bleu et est disposé à droite. Laes départements sont alors disposés de droite à gauche selon leur nombre de décès du Covid-19
+
+3.
+
+Réalisons un classification hiérarchique ascendante afin de répartir les individus dans un certain nombre de classe, nous allons pour cela utiliser les 4 critères à savoir lien minimum, moyen, maximum et Ward, nous allons par la suite regarder les sauts d'inertie de chaque dendograme 
+```{r}
+datadist = dist(x = donnees[,-1],method = "euclidean")
+
+#En utilisant le critère de Ward
+dataclustW = hclust(d = datadist,method = "ward.D2")
+
+sautInertie = sort(dataclustW$height, decreasing = TRUE)
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
+plot(dataclustW)
+
+```
+
+
+```{r}
+#En utilisant le critère lien minimun
+dataclustm = hclust(d = datadist,method = "single")
+sautInertie = sort(dataclustm$height, decreasing = TRUE)
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
+plot(dataclustm)
+```
+
+
+```{r}
+#En utilisant le critère lien maximun
+dataclustM = hclust(d = datadist,method = "complete")
+sautInertie = sort(dataclustM$height, decreasing = TRUE)
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
+plot(dataclustM)
+```
+
+
+```{r}
+#En utilisant le critère lien moyen
+dataclustAV = hclust(d = datadist,method = "average")
+sautInertie = sort(dataclustAV$height, decreasing = TRUE)
+plot(sautInertie[1:15],type = "s", xlab = "Nombre de classes", ylab = "Inertie")
+plot(dataclustAV)
+
+
+```
+
+
+
+
+
+
+
+
